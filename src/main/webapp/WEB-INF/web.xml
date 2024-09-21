@@ -1,4 +1,8 @@
 <web-app>
+    <session-config>
+        <session-timeout>60</session-timeout>
+    </session-config>
+
     <servlet>
         <servlet-name>MyServlet</servlet-name>
         <servlet-class>MyServlet</servlet-class>
@@ -9,29 +13,143 @@
         <url-pattern>/login</url-pattern>
     </servlet-mapping>
 
-    <!-- Define security constraints -->
-    <security-constraint>
-        <web-resource-collection>
-            <web-resource-name>Secured Area</web-resource-name>
-            <url-pattern>/secure/*</url-pattern>
-        </web-resource-collection>
-        <auth-constraint>
-            <role-name>USER</role-name>
-            <role-name>ADMIN</role-name>
-        </auth-constraint>
-    </security-constraint>
+    <servlet>
+        <servlet-name>SignUpServlet</servlet-name>
+        <servlet-class>SignUpServlet</servlet-class>
+    </servlet>
 
-    <!-- Define authentication method -->
-    <login-config>
-        <auth-method>BASIC</auth-method>
-        <realm-name>MyRealm</realm-name>
-    </login-config>
+    <servlet-mapping>
+        <servlet-name>SignUpServlet</servlet-name>
+        <url-pattern>/signup</url-pattern>
+    </servlet-mapping>
 
-    <!-- Define user roles -->
-    <security-role>
-        <role-name>USER</role-name>
-    </security-role>
-    <security-role>
-        <role-name>ADMIN</role-name>
-    </security-role>
+    <servlet>
+        <servlet-name>SessionCheck</servlet-name>
+        <servlet-class>SessionCheck</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>SessionCheck</servlet-name>
+        <url-pattern>/session</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>CheckUser</servlet-name>
+        <servlet-class>CheckUser</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>CheckUser</servlet-name>
+        <url-pattern>/checkUser</url-pattern>
+    </servlet-mapping>
+
+    <dependency>
+        <groupId>jakarta.websocket</groupId>
+        <artifactId>jakarta.websocket-api</artifactId>
+        <version>2.0.0</version>
+    </dependency>
+
+
+    <servlet>
+        <servlet-name>LogOutServlet</servlet-name>
+        <servlet-class>LogOutServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>LogOutServlet</servlet-name>
+        <url-pattern>/signout</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>SaveMessages</servlet-name>
+        <servlet-class>SaveMessages</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>SaveMessages</servlet-name>
+        <url-pattern>/save</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>LoadMessages</servlet-name>
+        <servlet-class>LoadMessages</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>LoadMessages</servlet-name>
+        <url-pattern>/load</url-pattern>
+    </servlet-mapping>
+
+
+    <servlet>
+        <servlet-name>CheckNotification</servlet-name>
+        <servlet-class>CheckNotification</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>CheckNotification</servlet-name>
+        <url-pattern>/unreadMessages</url-pattern>
+    </servlet-mapping>
+
+
+    <servlet>
+        <servlet-name>ChatHistoryServlet</servlet-name>
+        <servlet-class>ChatHistoryServlet</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>ChatHistoryServlet</servlet-name>
+        <url-pattern>/chats</url-pattern>
+    </servlet-mapping>
+    <servlet>
+        <servlet-name>GetUserId</servlet-name>
+        <servlet-class>GetUserId</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>GetUserId</servlet-name>
+        <url-pattern>/user</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>NotificationManager</servlet-name>
+        <servlet-class>NotificationManager</servlet-class>
+    </servlet>
+
+    <servlet-mapping>
+        <servlet-name>NotificationManager</servlet-name>
+        <url-pattern>/notification</url-pattern>
+    </servlet-mapping>
+
+
+    <filter>
+        <filter-name>CORS</filter-name>
+        <filter-class>org.apache.catalina.filters.CorsFilter</filter-class>
+        <init-param>
+            <param-name>cors.allowed.origins</param-name>
+            <param-value>http://localhost:4200</param-value>
+        </init-param>
+        <init-param>
+            <param-name>cors.allowed.methods</param-name>
+            <param-value>GET,POST,HEAD,OPTIONS,PUT,DELETE</param-value>
+        </init-param>
+        <init-param>
+            <param-name>cors.allowed.headers</param-name>
+            <param-value>Content-Type, Authorization</param-value>
+        </init-param>
+        <init-param>
+            <param-name>cors.exposed.headers</param-name>
+            <param-value>Content-Type, Authorization</param-value>
+        </init-param>
+        <init-param>
+            <param-name>cors.support.credentials</param-name>
+            <param-value>true</param-value>
+        </init-param>
+    </filter>
+
+    <filter-mapping>
+        <filter-name>CORS</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
 </web-app>
