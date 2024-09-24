@@ -1,5 +1,10 @@
+package servlet;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import database.DatabaseConnection;
+import services.PasswordValidation;
+
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -57,7 +62,7 @@ public class SignUpServlet extends HttpServlet {
                     preparedStatement.setString(1,username);
                     preparedStatement.setInt(2,organization);
                     int rowsAffected = preparedStatementInsert.executeUpdate();
-                    int n = preparedStatement.executeUpdate();
+                    preparedStatement.executeUpdate();
                     if (rowsAffected > 0) {
                         response.setStatus(HttpServletResponse.SC_CREATED);
                         response.getWriter().write("User created successfully.");
@@ -71,5 +76,9 @@ public class SignUpServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_CONFLICT);
             response.getWriter().write("Database error: " + e.getMessage());
         }
+    }
+
+    public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        doPost(request,response);
     }
 }

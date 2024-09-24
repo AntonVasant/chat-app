@@ -1,4 +1,8 @@
+package servlet;
+
 import org.json.JSONObject;
+import services.UserService;
+
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -21,9 +25,15 @@ public class LoadMessages extends HttpServlet {
 
         JSONObject jsonObject = new JSONObject(jsonBuffer.toString());
         String sender = jsonObject.getString("sender");
-        int receiver = jsonObject.getInt("receiver");
+        String receiver = jsonObject.getString("receiver");
+        System.out.println(sender);
+        System.out.println(receiver);
         int id = userService.getUserIdByName(sender);
-        String messageData = userService.getMessages(id,receiver);
+        int rec = userService.getUserIdByName(receiver);
+        System.out.println("id1 "+ id);
+        System.out.println("id2 "+rec);
+        String messageData = userService.getMessages(id,rec);
+        System.out.println("messages "+messageData);
         response.getWriter().write(messageData);
     }
 

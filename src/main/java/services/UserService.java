@@ -1,3 +1,6 @@
+package services;
+
+import database.DatabaseConnection;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import java.sql.*;
@@ -19,9 +22,9 @@ public class UserService {
     public void saveMessageToDatabase(String sender, String receiver, String content) {
         int id1 = getUserIdByName(sender);
         int id2 = getUserIdByName(receiver);
+        Connection connection = DatabaseConnection.getConnection();
         String insertMessageSQL = "INSERT INTO messages (sender_id, receiver_id, content, sender, receiver) VALUES (?, ?, ?, ?, ?)";
-         Connection conn = DatabaseConnection.getConnection();
-            try (PreparedStatement insertMessageStmt = conn.prepareStatement(insertMessageSQL)) {
+            try (PreparedStatement insertMessageStmt = connection.prepareStatement(insertMessageSQL)) {
                 insertMessageStmt.setInt(1, id1);
                 insertMessageStmt.setInt(2, id2);
                 insertMessageStmt.setString(3, content);
@@ -38,8 +41,9 @@ public class UserService {
         String query = "SELECT * FROM messages WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?) ORDER BY created_at;";
         List<JSONObject> messages = new ArrayList<>();
 
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
+        Connection connection = DatabaseConnection.getConnection();
+
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, senderId);
             statement.setInt(2, receiverId);
             statement.setInt(3, receiverId);
@@ -65,8 +69,8 @@ public class UserService {
 
     public String grabAllUnReadMessages(int id) {
         String query = "SELECT * FROM messages WHERE receiver_id = ? AND message_status = 'sent'";
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
+        Connection connection = DatabaseConnection.getConnection();
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, id);
             ResultSet rs = statement.executeQuery();
             JSONArray messages = new JSONArray();
@@ -87,8 +91,8 @@ public class UserService {
 
     public String getUserNameById(int id) {
         String query = "SELECT * FROM users WHERE user_id = ?";
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
+        Connection connection = DatabaseConnection.getConnection();
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, id);
             ResultSet rs = statement.executeQuery();
 
@@ -105,10 +109,11 @@ public class UserService {
         }
     }
 
+
     public int getUserIdByName(String name) {
         String query = "SELECT * FROM users WHERE user_name = ?";
-        try (Connection connection = DatabaseConnection.getConnection();
-             PreparedStatement statement = connection.prepareStatement(query)) {
+        Connection connection = DatabaseConnection.getConnection();
+        try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setString(1, name);
             ResultSet rs = statement.executeQuery();
 
@@ -124,4 +129,31 @@ public class UserService {
         }
     }
 
+    public boolean verifyUserByEmail(String email) {
+
+        String query = "SELECT * FROM users WHERE email = ?";
+        Connection connection = DatabaseConnection.getConnection();
+        try (PreparedStatement preparedStatement = connection.prepareStatement(query)){
+            preparedStatement.setString(1,email);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            return resultSet.next();
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean updatePassword(String password,String mail){
+        String query = "UPDATE users SET hashed_password = ? WHERE email = ?";
+        Connection connection = DatabaseConnection.getConnection();
+        try(PreparedStatement preparedStatement = connection.prepareStatement(query)){
+            preparedStatement.setString(1,password);
+            preparedStatement.setString(2,mail);
+            int n = preparedStatement.executeUpdate();
+            return n > 0;
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+       return false;
+    }
 }

@@ -1,14 +1,13 @@
+package websocket;
+
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import services.UserService;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.websocket.*;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.net.URI;
-import java.sql.SQLException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -35,15 +34,15 @@ public class WebSocketServer {
             }
         }
         System.out.println("Connected user ID: " + userId);
+        sessionToUserMap.put(session.getId(),userId);
         clients.put(userId,session);
     }
     @OnMessage
     public void onMessage(String message, Session session ) {
         try {
             JsonObject jsonMessage = JsonParser.parseString(message).getAsJsonObject();
-            System.out.println(jsonMessage.toString());
-            String sender = jsonMessage.get("sender").getAsString();
-            String receiver = jsonMessage.get("receiver").getAsString();
+            String sender = jsonMessage.get("senderName").getAsString();
+            String receiver = jsonMessage.get("receiverName").getAsString();
             JsonObject jsonObject = new JsonObject();
             String content = jsonMessage.get("content").getAsString();
             jsonObject.addProperty("content", content);
@@ -65,27 +64,12 @@ public class WebSocketServer {
     }
     @OnClose
     public void onClose(Session session) {
+        System.out.println("closing ");
         String senderId = sessionToUserMap.get(session.getId());
         if (senderId != null) {
             clients.remove(senderId);
             sessionToUserMap.remove(session.getId());
             System.out.println("Connection closed for user: " + senderId);
         }
-    }
-
-    private Map<String, String> getQueryParams(URI uri) {
-        Map<String, String> queryPairs = new HashMap<>();
-        String query = uri.getQuery();
-        System.out.println(query);
-        if (query != null) {
-            String[] pairs = query.split("&");
-            for (String pair : pairs) {
-                int idx = pair.indexOf("=");
-                if (idx > 0 && idx < pair.length() - 1) {
-                    queryPairs.put(pair.substring(0, idx), pair.substring(idx + 1));
-                }
-            }
-        }
-        return queryPairs;
     }
 }

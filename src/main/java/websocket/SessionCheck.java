@@ -1,5 +1,7 @@
-import org.json.JSONArray;
+package websocket;
+
 import org.json.JSONObject;
+import services.UserService;
 
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
@@ -22,10 +24,6 @@ public class SessionCheck extends HttpServlet {
             JSONObject jsonResponse = new JSONObject();
             jsonResponse.put("loggedIn", loggedIn);
             jsonResponse.put("role", role != null ? role : "");
-            if (loggedIn && id != -1) {
-                String messagesJson = userService.grabAllUnReadMessages(id);
-                jsonResponse.put("messages", messagesJson);
-            }
 
             response.setContentType("application/json");
 

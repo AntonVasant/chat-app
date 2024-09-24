@@ -1,3 +1,5 @@
+package servlet;
+
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -8,17 +10,15 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+
+import database.DatabaseConnection;
 import org.json.JSONObject;
 
-@WebServlet("/checkUser")
+@WebServlet("/api/checkUser")
 public class CheckUser extends HttpServlet {
 
-    private static final String JDBC_URL = "jdbc:postgresql://localhost:5432/servlet";
-    private static final String JDBC_USER = "postgres";
-    private static final String JDBC_PASSWORD = "Anton@2002";
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -37,7 +37,7 @@ public class CheckUser extends HttpServlet {
         int id = -1;
 
         if (!username.isEmpty()) {
-            try (Connection connection = DriverManager.getConnection(JDBC_URL, JDBC_USER, JDBC_PASSWORD)) {
+            try (Connection connection = DatabaseConnection.getConnection()) {
                 String query = "SELECT COUNT(*) FROM users WHERE username = ?";
                 try (PreparedStatement statement = connection.prepareStatement(query)) {
                     statement.setString(1, username);
@@ -54,7 +54,6 @@ public class CheckUser extends HttpServlet {
                 }
 
             } catch (Exception e) {
-                System.out.println("erroe");
                 e.printStackTrace();
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 return;

@@ -1,3 +1,6 @@
+package notification;
+
+import database.DatabaseConnection;
 import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -10,7 +13,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@WebServlet("/notification")
+@WebServlet("/api/notification")
 public class NotificationManager extends HttpServlet {
 
     @Override
@@ -23,12 +26,9 @@ public class NotificationManager extends HttpServlet {
                 jsonBuffer.append(line);
             }
         }
-        System.out.println("api");
         JSONObject jsonObject = new JSONObject(jsonBuffer.toString());
         String senderName  = jsonObject.getString("senderName");
         String receiverName = jsonObject.getString("receiverName");
-        System.out.println("sender "+senderName);
-        System.out.println("receiver name " + receiverName);
 
         try {
             Connection conn = DatabaseConnection.getConnection();
@@ -37,8 +37,7 @@ public class NotificationManager extends HttpServlet {
             pstmt.setString(1, senderName);
             pstmt.setString(2,receiverName);
 
-            int rowsAffected = pstmt.executeUpdate();
-            System.out.println("rows " +rowsAffected);
+            pstmt.executeUpdate();
 
         } catch (SQLException e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

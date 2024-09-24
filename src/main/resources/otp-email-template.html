@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            background-color: white;
+            padding: 20px;
+            margin: auto;
+            border-radius: 8px;
+            max-width: 600px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        p {
+            color: #555;
+        }
+        .otp {
+            font-weight: bold;
+            color: #1a73e8;
+        }
+    </style>
+    <title>OTP</title>
+</head>
+<body>
+<div class="container">
+    <h1>Password Reset Request</h1>
+    <p>We received a request to reset your password. Please use the following OTP to reset your password:</p>
+    <p class="otp">Your OTP: {{OTP}}</p>
+    <p>If you did not request this change, please ignore this email.</p>
+</div>
+</body>
+</html>
