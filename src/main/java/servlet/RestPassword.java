@@ -6,7 +6,6 @@ import database.DatabaseConnection;
 import services.EmailService;
 import services.PasswordValidation;
 import services.UserService;
-
 import javax.mail.MessagingException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;

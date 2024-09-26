@@ -28,6 +28,7 @@ public class SignUpServlet extends HttpServlet {
         String email = jsonObject.get("email").getAsString();
         String role =  jsonObject.get("role").getAsString();
         int organization =  jsonObject.get("organization_id").getAsInt();
+        System.out.println(username+" "+password+" "+email+" "+role+" "+organization);
         if (username == null || password == null || role == null) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             response.getWriter().write("Missing required parameters.");
@@ -36,15 +37,13 @@ public class SignUpServlet extends HttpServlet {
 
         password = PasswordValidation.hashPassword(password);
 
-        String sqlCheck = "SELECT * FROM users WHERE user_name = ?";
-        String sqlInsert = "INSERT INTO users (user_name, hashed_password, role, email, organization_id) VALUES (?, ?, ?, ?, ?)";
-        String chat  = "INSERT INTO chat_participants (user_name, organization_id)  VALUES (?,?)";
+        String sqlCheck = "SELECT * FROM users WHERE name = ?";
+        String sqlInsert = "INSERT INTO users (name, password, role, email, organization_id) VALUES (?, ?, ?, ?, ?)";
 
 
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement preparedStatementCheck = connection.prepareStatement(sqlCheck);
-             PreparedStatement preparedStatementInsert = connection.prepareStatement(sqlInsert);
-             PreparedStatement preparedStatement = connection.prepareStatement(chat))
+             PreparedStatement preparedStatementInsert = connection.prepareStatement(sqlInsert))
         {
 
             preparedStatementCheck.setString(1, username);
@@ -59,14 +58,12 @@ public class SignUpServlet extends HttpServlet {
                     preparedStatementInsert.setString(3, role);
                     preparedStatementInsert.setString(4,email);
                     preparedStatementInsert.setInt(5, organization);
-                    preparedStatement.setString(1,username);
-                    preparedStatement.setInt(2,organization);
                     int rowsAffected = preparedStatementInsert.executeUpdate();
-                    preparedStatement.executeUpdate();
                     if (rowsAffected > 0) {
                         response.setStatus(HttpServletResponse.SC_CREATED);
                         response.getWriter().write("User created successfully.");
                     } else {
+                        System.out.println("fpond");
                         response.setStatus(HttpServletResponse.SC_CONFLICT);
                         response.getWriter().write("Failed to create user.");
                     }
@@ -76,9 +73,5 @@ public class SignUpServlet extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_CONFLICT);
             response.getWriter().write("Database error: " + e.getMessage());
         }
-    }
-
-    public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        doPost(request,response);
     }
 }

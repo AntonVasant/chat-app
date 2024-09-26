@@ -41,31 +41,29 @@ public class LoginServlet extends HttpServlet {
         HttpSession session;
 
             Connection connection = DatabaseConnection.getConnection();
-            String sql = "SELECT * FROM users WHERE user_name = ?";
+            String sql = "SELECT * FROM users WHERE name = ?";
             try (PreparedStatement preparedStatement = connection.prepareStatement(sql)) {
                 preparedStatement.setString(1, username);
                 JSONObject jsonObject1 = new JSONObject();
                 try (ResultSet resultSet = preparedStatement.executeQuery()) {
                     if (resultSet.next()) {
-                        String hashedPassword = resultSet.getString("hashed_password");
+                        System.out.println(resultSet);
+                        String hashedPassword = resultSet.getString("password");
                         String role = resultSet.getString("role");
                         int id = resultSet.getInt(1);
-                        int organization_id =  resultSet.getInt(5);
+                        int organization_id =  resultSet.getInt(6);
                         session = request.getSession(true);
                         if (PasswordValidation.verifyPassword(password,hashedPassword)){
-                            String messagesJson = userService.grabAllUnReadMessages(id);
-                            if (messagesJson != null){
+
                                 session.setAttribute("username", username);
                                 session.setAttribute("role", role);
                                 session.setAttribute("id",id);
                                 session.setAttribute("organization",organization_id);
-                                JSONArray jsonArray = new JSONArray(messagesJson);
-                                jsonObject1.put("notification",jsonArray);
                                 jsonObject1.put("loggedIn",true);
                                 jsonObject1.put("role",role);
+                                jsonObject1.put("id",id);
                                 response.getWriter().write(jsonObject1.toString());
                             }
-                        }
                     } else {
                         jsonObject1.put("role","none");
 

@@ -18,34 +18,58 @@ import org.json.JSONObject;
 public class ChatHistoryServlet extends HttpServlet {
 
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException {
         HttpSession session = request.getSession(false);
-        System.out.println(session.getAttribute("username"));
-        System.out.println(session.getAttribute("username"));
-        String name = (String) session.getAttribute("username");
+        System.out.println("name");
+        String send =  request.getParameter("id");
+        int sender = Integer.parseInt(send);
+        int id = (int) session.getAttribute("id");
+        System.out.println("sender "+sender);
 
-        String query = "SELECT * FROM chat_participants WHERE organization_id = (SELECT organization_id FROM chat_participants WHERE user_name = ?) AND user_name <> ? ORDER BY user_name;";
+        String query = "SELECT u.user_id, u.name, u.email, u.role, \n" +
+                "       COALESCE(COUNT(m.message_id), 0) AS unread_messages\n" +
+                "FROM users u\n" +
+                "LEFT JOIN chats c \n" +
+                "       ON (c.user1_id = ? AND c.user2_id = u.user_id)\n" +
+                "       OR (c.user2_id = ? AND c.user1_id = u.user_id)\n" +
+                "LEFT JOIN messages m \n" +
+                "       ON m.chat_id = c.chat_id\n" +
+                "       AND m.receiver_id = ? \n" +
+                "       AND m.is_read = FALSE\n" +
+                "WHERE u.organization_id = (SELECT organization_id FROM users WHERE user_id = ?)\n" +
+                "AND u.user_id != ?\n" +
+                "GROUP BY u.user_id, u.name, u.email, u.role;\n";
 
 
         try (Connection connection = DatabaseConnection.getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
-            preparedStatement.setString(1, name);
-            preparedStatement.setString(2, name);
+            preparedStatement.setInt(1, id);
+            preparedStatement.setInt(2, id);
+            preparedStatement.setInt(3, id);
+            preparedStatement.setInt(4, id);
+            preparedStatement.setInt(5, id);
 
             try (ResultSet resultSet = preparedStatement.executeQuery()) {
-                JSONArray chatsArray = new JSONArray();
+                JSONArray jsonArray = new JSONArray();
                 while (resultSet.next()) {
-                    JSONObject chatObject = new JSONObject();
-                    chatObject.put("id", resultSet.getInt(1));
-                    chatObject.put("name",resultSet.getString(2));
-                    chatObject.put("lastMessage",resultSet.getString(4));
-                    chatObject.put("time",resultSet.getString(5));
-                    chatsArray.put(chatObject);
+                    JSONObject jsonObject = new JSONObject();
+
+                    int userId = resultSet.getInt("user_id");
+                    String name = resultSet.getString("name");
+                    String email = resultSet.getString("email");
+                    int unreadMessages = resultSet.getInt("unread_messages");
+
+                    jsonObject.put("userId", userId);
+                    jsonObject.put("name", name);
+                    jsonObject.put("email", email);
+                    jsonObject.put("unread_messages", unreadMessages);
+
+                    jsonArray.put(jsonObject);
                 }
-                response.setContentType("application/json");
-                response.getWriter().write(chatsArray.toString());
-            }
+
+                    response.setContentType("application/json");
+                response.getWriter().write(jsonArray.toString());
         } catch (SQLException e) {
             System.out.println("sql");
             e.printStackTrace();
@@ -53,9 +77,8 @@ public class ChatHistoryServlet extends HttpServlet {
             System.out.println("IO");
             e.printStackTrace();
         }
-    }
-
-    public void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException {
-        doPost(request,response);
+    } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

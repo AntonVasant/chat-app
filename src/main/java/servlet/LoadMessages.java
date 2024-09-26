@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.sql.SQLException;
 
 @WebServlet("/load")
 public class LoadMessages extends HttpServlet {
@@ -24,19 +25,21 @@ public class LoadMessages extends HttpServlet {
         }
 
         JSONObject jsonObject = new JSONObject(jsonBuffer.toString());
-        String sender = jsonObject.getString("sender");
-        String receiver = jsonObject.getString("receiver");
-        System.out.println(sender);
-        System.out.println(receiver);
-        int id = userService.getUserIdByName(sender);
-        int rec = userService.getUserIdByName(receiver);
-        System.out.println("id1 "+ id);
-        System.out.println("id2 "+rec);
-        String messageData = userService.getMessages(id,rec);
-        System.out.println("messages "+messageData);
-        response.getWriter().write(messageData);
-    }
-
-    public void doGet(HttpServletRequest request,HttpServletResponse response) throws IOException {
+        int sender = jsonObject.getInt("sender");
+        int receiver = jsonObject.getInt("receiver");
+        int chatId = userService.findChatId(sender, receiver);
+        if (chatId > 0 ){
+            String messageData = userService.getMessages(chatId).toString();
+            response.getWriter().write(messageData);
+        }
+        else {
+            try {
+                System.out.println("else");
+                userService.createNewChat(sender,receiver);
+                response.getWriter().write("no messages");
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 }

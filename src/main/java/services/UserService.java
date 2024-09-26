@@ -19,17 +19,19 @@ public class UserService {
     }
 
 
-    public void saveMessageToDatabase(String sender, String receiver, String content) {
-        int id1 = getUserIdByName(sender);
-        int id2 = getUserIdByName(receiver);
+    public void saveMessageToDatabase(int sender, int receiver, String content, boolean state) {
+        System.out.println("saving");
+        int id = findChatId(sender,receiver);
+        System.out.println(id);
         Connection connection = DatabaseConnection.getConnection();
-        String insertMessageSQL = "INSERT INTO messages (sender_id, receiver_id, content, sender, receiver) VALUES (?, ?, ?, ?, ?)";
+        String insertMessageSQL = "INSERT INTO messages (sender_id, receiver_id, chat_id, message_text, is_read)\n" +
+                "VALUES (?, ?, ?, ?, ?);";
             try (PreparedStatement insertMessageStmt = connection.prepareStatement(insertMessageSQL)) {
-                insertMessageStmt.setInt(1, id1);
-                insertMessageStmt.setInt(2, id2);
-                insertMessageStmt.setString(3, content);
-                insertMessageStmt.setString(4, sender);
-                insertMessageStmt.setString(5, receiver);
+                insertMessageStmt.setInt(1, sender);
+                insertMessageStmt.setInt(2, receiver);
+                insertMessageStmt.setInt(3,id);
+                insertMessageStmt.setString(4, content);
+                insertMessageStmt.setBoolean(5,state);
                 insertMessageStmt.executeUpdate();
             }
         catch (SQLException e) {
@@ -37,38 +39,68 @@ public class UserService {
         }
     }
 
-    public String getMessages(int senderId, int receiverId) {
-        String query = "SELECT * FROM messages WHERE (sender_id = ? AND receiver_id = ?) OR (sender_id = ? AND receiver_id = ?) ORDER BY created_at;";
+    public List<JSONObject> getMessages(int chatId) {
+
+        String query = "SELECT *  \n" +
+                "FROM messages m\n" +
+                "WHERE m.chat_id = ?\n" +
+                "ORDER BY m.created_at ASC;";
         List<JSONObject> messages = new ArrayList<>();
 
         Connection connection = DatabaseConnection.getConnection();
 
         try (PreparedStatement statement = connection.prepareStatement(query)) {
-            statement.setInt(1, senderId);
-            statement.setInt(2, receiverId);
-            statement.setInt(3, receiverId);
-            statement.setInt(4, senderId);
+            statement.setInt(1, chatId);
             ResultSet rs = statement.executeQuery();
 
-            while (rs.next()) {
-                JSONObject messageJson = new JSONObject();
-                messageJson.put("senderId",rs.getInt(3));
-                messageJson.put("senderName",rs.getString("sender"));
-                messageJson.put("receiverName",rs.getString("receiver"));
-                messageJson.put("receiver", rs.getInt(4));
-                messageJson.put("content", rs.getString(5));
-                messageJson.put("timestamp", rs.getTimestamp(6).toString());
-                messages.add(messageJson);
+            if (rs.next()) {
+                do {
+                    JSONObject messageJson = new JSONObject();
+                    messageJson.put("sender", rs.getInt(3));
+                    messageJson.put("receiverId", rs.getInt(4));
+                    messageJson.put("content", rs.getString(5));
+                    messageJson.put("timestamp", rs.getTimestamp(7));
+                    messages.add(messageJson);
+                } while (rs.next());
+            } else {
+                return null;
             }
         } catch (SQLException e) {
             e.printStackTrace();
+            return null;
         }
-        JSONArray jsonArray = new JSONArray(messages);
-        return jsonArray.toString();
+
+        return messages;
+    }
+
+
+    public int findChatId(int sender, int receiver){
+        String query = "SELECT * FROM chats WHERE user1_id = ? AND user2_id = ? OR user1_id = ? AND user2_id = ?";
+        Connection connection = DatabaseConnection.getConnection();
+        try(PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+            preparedStatement.setInt(1,sender);
+            preparedStatement.setInt(2,receiver);
+            preparedStatement.setInt(3,receiver);
+            preparedStatement.setInt(4,sender);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (resultSet.next()){
+                return resultSet.getInt(1);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return 0;
     }
 
     public String grabAllUnReadMessages(int id) {
-        String query = "SELECT * FROM messages WHERE receiver_id = ? AND message_status = 'sent'";
+        String query = "SELECT\n" +
+                "    m.message_id,\n" +
+                "    m.message_text,\n" +
+                "    m.created_at,\n" +
+                "    u.name AS sender_name\n" +
+                "FROM messages m\n" +
+                "INNER JOIN users u ON m.sender_id = u.user_id\n" +
+                "WHERE m.receiver_id = ? AND m.is_read = FALSE;";
         Connection connection = DatabaseConnection.getConnection();
         try (PreparedStatement statement = connection.prepareStatement(query)) {
             statement.setInt(1, id);
@@ -76,8 +108,8 @@ public class UserService {
             JSONArray messages = new JSONArray();
             while (rs.next()) {
                 JSONObject messageJson = new JSONObject();
-                messageJson.put("sender",rs.getString("sender"));
-                messageJson.put("content", rs.getString("content"));
+                messageJson.put("sender",rs.getString("sender_name"));
+                messageJson.put("content", rs.getString("message_text"));
                 messageJson.put("timestamp", rs.getTimestamp("created_at").toString());
                 messages.put(messageJson);
             }
@@ -155,5 +187,15 @@ public class UserService {
             e.printStackTrace();
         }
        return false;
+    }
+
+    public void createNewChat(int user1, int user2) throws SQLException {
+        String query = "INSERT INTO chats (user1_id, user2_id) VALUES (?,?);";
+        Connection connection = DatabaseConnection.getConnection();
+        try(PreparedStatement statement = connection.prepareStatement(query)){
+            statement.setInt(1,user1);
+            statement.setInt(2,user2);
+            statement.executeUpdate();
+        }
     }
 }

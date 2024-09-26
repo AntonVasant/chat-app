@@ -27,15 +27,18 @@ public class NotificationManager extends HttpServlet {
             }
         }
         JSONObject jsonObject = new JSONObject(jsonBuffer.toString());
-        String senderName  = jsonObject.getString("senderName");
-        String receiverName = jsonObject.getString("receiverName");
+        int senderName  = jsonObject.getInt("sender");
+        int receiverName = jsonObject.getInt("receiver");
 
         try {
             Connection conn = DatabaseConnection.getConnection();
-            String sql = "UPDATE messages SET message_status = 'read' WHERE sender = ? AND receiver = ?";
+            String sql = "UPDATE messages \n" +
+                    "SET is_read = TRUE \n" +
+                    "WHERE sender_id = ? \n" +
+                    "AND receiver_id = ?;";
             PreparedStatement pstmt = conn.prepareStatement(sql);
-            pstmt.setString(1, senderName);
-            pstmt.setString(2,receiverName);
+            pstmt.setInt(1, senderName);
+            pstmt.setInt(2,receiverName);
 
             pstmt.executeUpdate();
 
